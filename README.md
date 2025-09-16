@@ -68,3 +68,4 @@ docker compose down
 ## License
 
 MIT License - See LICENSE file for details.
+<img width="1915" height="871" alt="image" src="https://github.com/user-attachments/assets/b37ca4e5-f9d8-4491-810f-7408da939d63" />
