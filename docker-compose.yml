@@ -1,0 +1,63 @@
+services:
+  db:
+    image: postgis/postgis:15-3.3
+    container_name: nasa-db
+    environment:
+      POSTGRES_USER: nasa
+      POSTGRES_PASSWORD: nasa123
+      POSTGRES_DB: explorer
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - nasa-network
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nasa-backend
+    environment:
+      - DATABASE_URL=postgresql://nasa:nasa123@db:5432/explorer
+      - PYTHONPATH=/app
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - nasa-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nasa-frontend
+    environment:
+      - REACT_APP_API_URL=http://backend:8000
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    networks:
+      - nasa-network
+
+volumes:
+  db_data:
+
+networks:
+  nasa-network:
+    driver: bridge
