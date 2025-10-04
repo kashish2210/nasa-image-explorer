@@ -5,6 +5,9 @@ import Controls from './components/Controls';
 import axios from 'axios';
 import './App.css';
 
+// Configure API base URL - uses /api for combined deployment
+const API_BASE_URL = '/api';
+
 function App() {
   const viewerRef = useRef(null);
   const containerRef = useRef(null);
@@ -16,11 +19,15 @@ function App() {
     // Test backend connection
     const testBackend = async () => {
       try {
-        const response = await axios.get('/health');
+        console.log('Connecting to backend...');
+        
+        // Use /api prefix for all backend calls
+        const response = await axios.get(`${API_BASE_URL}/health`);
         console.log('Backend connected:', response.data);
         
         // Load features
-        const featuresResponse = await axios.get('/features');
+        const featuresResponse = await axios.get(`${API_BASE_URL}/features`);
+        console.log('Features loaded:', featuresResponse.data);
         setFeatures(featuresResponse.data.features);
         
         setLoading(false);
@@ -77,9 +84,16 @@ function App() {
     };
   }, [loading, error]);
 
-  const handleSearch = (query) => {
+  const handleSearch = async (query) => {
     console.log('Searching for:', query);
-    // Implement search functionality
+    try {
+      // Use /api prefix for search
+      const response = await axios.get(`${API_BASE_URL}/features?search=${encodeURIComponent(query)}`);
+      setFeatures(response.data.features);
+      console.log('Search results:', response.data);
+    } catch (err) {
+      console.error('Search failed:', err);
+    }
   };
 
   if (loading) {
