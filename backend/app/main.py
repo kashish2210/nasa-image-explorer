@@ -15,37 +15,45 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configure CORS
+# Configure CORS - Allow all origins for production
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://frontend:3000"],
+    allow_origins=["*"],  # In production, you might want to restrict this
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Mount static files for tiles
+# Mount static files for tiles (if they exist)
 TILES_DIR = "/app/data/tiles"
 if os.path.exists(TILES_DIR):
     app.mount("/tiles", StaticFiles(directory=TILES_DIR), name="tiles")
+    logger.info(f"Mounted tiles directory: {TILES_DIR}")
+else:
+    logger.warning(f"Tiles directory not found: {TILES_DIR}")
 
-@app.get("/")
-async def root():
+# API Routes (all prefixed with /api)
+@app.get("/api")
+async def api_root():
     return {
-        "message": "NASA Image Explorer Backend is running",
+        "message": "NASA Image Explorer API",
         "version": "1.0.0",
         "endpoints": {
-            "health": "/health",
-            "tiles": "/tiles/{z}/{x}/{y}",
-            "features": "/features"
+            "health": "/api/health",
+            "tiles": "/api/tiles/{z}/{x}/{y}",
+            "features": "/api/features"
         }
     }
 
-@app.get("/health")
+@app.get("/api/health")
 async def health_check():
-    return {"status": "healthy", "service": "nasa-image-explorer-backend"}
+    return {
+        "status": "healthy", 
+        "service": "nasa-image-explorer-backend",
+        "tiles_available": os.path.exists(TILES_DIR)
+    }
 
-@app.get("/tiles/{z}/{x}/{y}")
+@app.get("/api/tiles/{z}/{x}/{y}")
 async def get_tile(z: int, x: int, y: int):
     """Serve image tiles for the zoomable interface"""
     # Support multiple file extensions
@@ -59,7 +67,7 @@ async def get_tile(z: int, x: int, y: int):
     logger.warning(f"Tile not found: {z}/{x}/{y}")
     raise HTTPException(status_code=404, detail="Tile not found")
 
-@app.get("/features")
+@app.get("/api/features")
 async def get_features(search: str = None):
     """Get planetary/space features with optional search"""
     # Sample features data
@@ -75,6 +83,25 @@ async def get_features(search: str = None):
     
     return {"features": features, "count": len(features)}
 
+# Serve React frontend (MUST BE LAST)
+# This catches all routes not matched above and serves the React app
+STATIC_DIR = "/app/static"
+if os.path.exists(STATIC_DIR):
+    app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
+    logger.info(f"Serving frontend from: {STATIC_DIR}")
+else:
+    logger.warning(f"Frontend static directory not found: {STATIC_DIR}")
+    
+    # Fallback root for when frontend is not available
+    @app.get("/")
+    async def root_fallback():
+        return {
+            "message": "NASA Image Explorer Backend is running",
+            "note": "Frontend not available. API endpoints available at /api",
+            "version": "1.0.0"
+        }
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
