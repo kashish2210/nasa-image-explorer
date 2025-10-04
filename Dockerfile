@@ -1,14 +1,22 @@
-# Build Frontend
+# Stage 1: Build Frontend
 FROM node:18-alpine as frontend-build
+
 WORKDIR /app/frontend
+
+# Copy package files
 COPY frontend/package*.json ./
 RUN npm ci
+
+# Copy frontend source
 COPY frontend/ ./
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
+
+# Set API URL to relative path since backend serves everything
+ENV VITE_API_URL=/api
+
+# Build
 RUN npm run build
 
-# Backend with Frontend
+# Stage 2: Backend with Frontend
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -16,15 +24,18 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Copy and install Python dependencies
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend code
 COPY backend/ .
 
-# Copy frontend build
+# Copy frontend build from previous stage
 COPY --from=frontend-build /app/frontend/dist ./static
+
+# Create tiles directory (even if empty)
+RUN mkdir -p /app/data/tiles
 
 # Expose port
 EXPOSE 8000
