@@ -5,15 +5,17 @@ WORKDIR /app/frontend
 
 # Copy package files
 COPY frontend/package*.json ./
-RUN npm ci
+
+# Install dependencies
+RUN npm install
 
 # Copy frontend source
 COPY frontend/ ./
 
-# Set API URL to relative path since backend serves everything
+# Set API URL
 ENV VITE_API_URL=/api
 
-# Build
+# Build frontend
 RUN npm run build
 
 # Stage 2: Backend with Frontend
@@ -31,14 +33,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend code
 COPY backend/ .
 
-# Copy frontend build from previous stage
+# Copy frontend build
 COPY --from=frontend-build /app/frontend/dist ./static
 
-# Create tiles directory (even if empty)
+# Create data directory
 RUN mkdir -p /app/data/tiles
 
 # Expose port
 EXPOSE 8000
 
-# Start command
+# Start application
 CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
