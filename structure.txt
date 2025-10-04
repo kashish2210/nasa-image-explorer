@@ -1,0 +1,73 @@
+Folder PATH listing for volume New Volume
+Volume serial number is D6F8-BA1F
+K:.
+¦   .gitattributes
+¦   .gitignore
+¦   docker-compose.prod.yml
+¦   docker-compose.yml
+¦   LICENSE
+¦   README.md
+¦   setup_nasa_project.sh
+¦   structure.txt
+¦   
++---.dist
++---.github
+¦   +---workflows
+¦           deploy.yml
+¦           nasa-image-explorer.yml
+¦           
++---backend
+¦   ¦   Dockerfile
+¦   ¦   requirements.txt
+¦   ¦   
+¦   +---app
+¦   ¦   ¦   main.py
+¦   ¦   ¦   
+¦   ¦   +---api
+¦   ¦   +---core
+¦   ¦   +---models
+¦   ¦   +---schemas
+¦   ¦   +---utils
+¦   ¦   +---__pycache__
+¦   ¦           main.cpython-311.pyc
+¦   ¦           
+¦   +---data
++---data
+¦   +---raw
+¦   ¦       .gitkeep
+¦   ¦       
+¦   +---scripts
+¦   ¦       create_tiles.sh
+¦   ¦       
+¦   +---tiles
+¦           .gitkeep
+¦           
++---database
+¦   ¦   init.sql
+¦   ¦   
+¦   +---migrations
++---docs
++---frontend
+¦   ¦   .dockerignore
+¦   ¦   Dockerfile
+¦   ¦   package.json
+¦   ¦   vite.config.js
+¦   ¦   
+¦   +---node_modules
+¦   +---public
+¦   ¦       index.html
+¦   ¦       
+¦   +---src
+¦       ¦   App.css
+¦       ¦   App.js
+¦       ¦   index.js
+¦       ¦   
+¦       +---components
+¦       ¦       Controls.js
+¦       ¦       SearchBar.js
+¦       ¦       
+¦       +---hooks
+¦       +---pages
+¦       +---services
++---infra
++---tiles
