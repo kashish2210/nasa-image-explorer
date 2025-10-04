@@ -1,4 +1,4 @@
-# Stage 1: Build Frontend
+# Stage 1: Build Frontend (Create React App)
 FROM node:18-alpine as frontend-build
 
 WORKDIR /app/frontend
@@ -12,11 +12,11 @@ RUN npm install
 # Copy frontend source
 COPY frontend/ ./
 
-# Set API URL
-ENV VITE_API_URL=/api
-
-# Build frontend
+# Build frontend (Create React App outputs to 'build' folder)
 RUN npm run build
+
+# Verify build output
+RUN echo "Build complete! Contents:" && ls -la build/
 
 # Stage 2: Backend with Frontend
 FROM python:3.11-slim
@@ -33,8 +33,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend code
 COPY backend/ .
 
-# Copy frontend build
-COPY --from=frontend-build /app/frontend/dist ./static
+# Copy frontend build from 'build' folder (not 'dist')
+COPY --from=frontend-build /app/frontend/build ./static
+
+# Verify static files
+RUN echo "Static files copied:" && ls -la static/
 
 # Create data directory
 RUN mkdir -p /app/data/tiles
